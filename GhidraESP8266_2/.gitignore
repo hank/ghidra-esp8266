@@ -1,0 +1,5 @@
+bin
+.ant*.xml
+.settings
+.classpath
+.project

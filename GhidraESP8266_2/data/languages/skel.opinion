@@ -1,0 +1,6 @@
+<opinions>
+<!-- The primary and secondary constraint values must be specified as a decimal string -->
+    <constraint loader="ESP8266" compilerSpecID="default">
+    		<constraint primary="0" processor="Xtensa"  size="32" variant="default" />
+    </constraint>
+</opinions>
