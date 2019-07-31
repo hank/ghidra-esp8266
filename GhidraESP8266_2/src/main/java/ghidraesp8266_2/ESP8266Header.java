@@ -15,11 +15,14 @@ public class ESP8266Header implements StructConverter {
 	private byte segments;
 	private byte flash_mode;
 	private byte flash_size_free;
-	private byte entrypoint;
+	private long entrypoint;
 	
 	public ESP8266Header(BinaryReader reader) throws IOException {
 		magic = reader.readNextByte();
 		segments = reader.readNextByte();
+		flash_mode = reader.readNextByte();
+		flash_size_free = reader.readNextByte();
+		entrypoint = reader.readNextInt();
 		if (ESP8266Constants.ESP_MAGIC_BASE != getMagic()) {
 			throw new IOException("not an ESP8266 file.");
 		}
@@ -29,10 +32,10 @@ public class ESP8266Header implements StructConverter {
 	public DataType toDataType() throws DuplicateNameException, IOException {
 		Structure structure = new StructureDataType("header_item", 0);
 		structure.add(BYTE, 1, "magic", null);
-		structure.add(BYTE, 1, "segments", null);
+		structure.add(BYTE, 1, "segments", "Number of segments");
 		structure.add(BYTE, 1, "flash_mode", null);
 		structure.add(BYTE, 1, "flash_size_free", null);
-		structure.add(BYTE, 1, "entrypoint", null);
+		structure.add(DWORD, 4, "entrypoint", "The entry function");
 		return structure;
 	}
 	
@@ -68,15 +71,11 @@ public class ESP8266Header implements StructConverter {
 		this.flash_size_free = flash_size_free;
 	}
 
-	public byte getEntrypoint() {
+	public long getEntrypoint() {
 		return entrypoint;
 	}
 
-	public void setEntrypoint(byte entrypoint) {
+	public void setEntrypoint(long entrypoint) {
 		this.entrypoint = entrypoint;
 	}
-
-	
-	
-
 }

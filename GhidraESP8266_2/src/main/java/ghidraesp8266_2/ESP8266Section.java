@@ -41,6 +41,16 @@ public class ESP8266Section implements StructConverter {
 	}
 
 	public String getName() {
-		return String.format("Section %08x, size %u", offset, size);
+		// Rules based on ranges
+		if(offset == ESP8266Constants.SEGMENT_USER_CODE_BASE)
+			return ".user_code";
+		else if(offset == ESP8266Constants.SEGMENT_USER_DATA_BASE)
+			return ".user_data";
+		else if(offset <= ESP8266Constants.SEGMENT_DATA_END)
+			return ".data";
+		else if(offset > ESP8266Constants.SEGMENT_CODE_BASE)
+			return ".code";
+		else
+			return ".unknown";
 	}
 }

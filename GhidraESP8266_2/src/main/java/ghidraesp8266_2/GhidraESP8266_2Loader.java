@@ -124,10 +124,10 @@ public class GhidraESP8266_2Loader extends AbstractLibrarySupportLoader {
 			return d;
 		}
 		catch (CodeUnitInsertionException e) {
-			Msg.warn(this, "ELF data markup conflict at " + address);
+			Msg.warn(this, "Data markup conflict at " + address);
 		}
 		catch (DataTypeConflictException e) {
-			Msg.error(this, "ELF data type markup conflict:" + e.getMessage());
+			Msg.error(this, "Data type markup conflict:" + e.getMessage());
 		}
 		return null;
 	}
@@ -140,9 +140,6 @@ public class GhidraESP8266_2Loader extends AbstractLibrarySupportLoader {
 		monitor.setMessage( "ESP8266 Loader: Start loading" );
 		
 		try {
-			Address start = program.getAddressFactory().getDefaultAddressSpace().getAddress( 0x0 );
-			long length = provider.length();
-	
 			InputStream inputStream;
 			inputStream = provider.getInputStream(0);
 			mbu = new MemoryBlockUtil(program, handler);
@@ -160,6 +157,9 @@ public class GhidraESP8266_2Loader extends AbstractLibrarySupportLoader {
 			for (ESP8266Section section : module.getSections()) {
 				monitor.setMessage("Loaded " + section.getName());
 			}
+			// Create entry point
+			Address entryAddress = program.getAddressFactory().getDefaultAddressSpace().getAddress(module.getHeader().getEntrypoint(), true);
+			program.getSymbolTable().addExternalEntryPoint(entryAddress);
 		} catch (Exception e) {
 			log.appendException( e );
 		}

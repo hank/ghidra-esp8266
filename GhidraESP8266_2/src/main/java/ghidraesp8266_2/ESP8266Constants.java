@@ -7,5 +7,8 @@ public final class ESP8266Constants {
 	public final static String SECONDARY_KEY = "2";
     public final static int IROM_MAP_START = 0x40200000;
     public final static int IROM_MAP_END = 0x40300000;
-
+    public final static int SEGMENT_USER_CODE_BASE = 0x40100000;
+    public final static int SEGMENT_USER_DATA_BASE = 0x3FFE8000;
+    public final static int SEGMENT_DATA_END = 0x3FFFFFFF;
+    public final static int SEGMENT_CODE_BASE = 0x40100000;
 }
