@@ -27,8 +27,6 @@ import ghidra.app.util.importer.MemoryConflictHandler;
 import ghidra.app.util.importer.MessageLog;
 import ghidra.app.util.opinion.AbstractLibrarySupportLoader;
 import ghidra.app.util.opinion.LoadSpec;
-import ghidra.app.util.opinion.QueryOpinionService;
-import ghidra.app.util.opinion.QueryResult;
 import ghidra.framework.model.DomainObject;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.address.AddressOverflowException;
@@ -36,9 +34,11 @@ import ghidra.program.model.data.DataType;
 import ghidra.program.model.data.DataTypeConflictException;
 import ghidra.program.model.data.DataUtilities;
 import ghidra.program.model.data.DataUtilities.ClearDataMode;
+import ghidra.program.model.lang.LanguageCompilerSpecPair;
 import ghidra.program.model.listing.Data;
 import ghidra.program.model.listing.Listing;
 import ghidra.program.model.listing.Program;
+import ghidra.program.model.util.AddressSetPropertyMap;
 import ghidra.program.model.util.CodeUnitInsertionException;
 import ghidra.util.Msg;
 import ghidra.util.exception.CancelledException;
@@ -62,15 +62,9 @@ public class GhidraESP8266_2Loader extends AbstractLibrarySupportLoader {
 		BinaryReader reader = new BinaryReader(provider, true);
 		ESP8266Header header = new ESP8266Header(reader);
 		if (ESP8266Constants.ESP_MAGIC_BASE == header.getMagic()) {
-			Msg.info(this, "Magic Matched");
-			List<QueryResult> queries =
-				QueryOpinionService.query(getName(), ESP8266Constants.PRIMARY_KEY, null);
-			for (QueryResult result : queries) {
-				loadSpecs.add(new LoadSpec(this, 0, result));
-			}
-			if (loadSpecs.isEmpty()) {
-				loadSpecs.add(new LoadSpec(this, 0, true));
-			}
+			Msg.info(this, "ESP Magic Matched");
+			loadSpecs.add(new LoadSpec(this, 0, 
+					 new LanguageCompilerSpecPair("Xtensa:LE:32:default", "default"), true));
 		}
 		return loadSpecs;
 	}
@@ -102,6 +96,22 @@ public class GhidraESP8266_2Loader extends AbstractLibrarySupportLoader {
 		}
 	}
 	
+	private void markAsCode(Program program, Address address) {
+		AddressSetPropertyMap codeProp = program.getAddressSetPropertyMap("CodeMap");
+		if (codeProp == null) {
+			try {
+				codeProp = program.createAddressSetPropertyMap("CodeMap");
+			}
+			catch (DuplicateNameException e) {
+				codeProp = program.getAddressSetPropertyMap("CodeMap");
+			}
+		}
+
+		if (codeProp != null) {
+			codeProp.add(address, address);
+		}
+	}
+	
 	private void markupSections(Program program, ESP8266Module module, TaskMonitor monitor, InputStream reader) throws DuplicateNameException, IOException, AddressOverflowException {
 		boolean r = true;
 		boolean w = true;
@@ -109,8 +119,19 @@ public class GhidraESP8266_2Loader extends AbstractLibrarySupportLoader {
 		String BLOCK_SOURCE_NAME = "ESP8266 Section";
 		for (ESP8266Section section: module.getSections()) {
 			Address start = program.getAddressFactory().getDefaultAddressSpace().getAddress(section.getOffset());
+			Msg.info(this, String.format("Section at offset %08x, size %d", start.getOffset(), section.getSize()));
 			mbu.createInitializedBlock(section.getName(), start, reader, section.getSize(), "", BLOCK_SOURCE_NAME, r, w, x, monitor);
 			createData(program, program.getListing(), start, section.toDataType());			
+			// Mark code sections
+			if(section.getType() == ESP8266Constants.SECTION_TYPE_CODE)
+			{
+				Msg.info(this, "Section is code");
+				markAsCode(program, start);
+			}
+			else
+			{
+				Msg.info(this, "Section is not code");
+			}
 		}
 	}
 	
@@ -118,8 +139,7 @@ public class GhidraESP8266_2Loader extends AbstractLibrarySupportLoader {
 		try {
 			Data d = listing.getDataAt(address);
 			if (d == null || !dt.isEquivalent(d.getDataType())) {
-				d = DataUtilities.createData(program, address, dt, -1, false,
-					ClearDataMode.CLEAR_ALL_UNDEFINED_CONFLICT_DATA);
+				d = DataUtilities.createData(program, address, dt, -1, false, ClearDataMode.CLEAR_ALL_UNDEFINED_CONFLICT_DATA);
 			}
 			return d;
 		}
@@ -148,15 +168,9 @@ public class GhidraESP8266_2Loader extends AbstractLibrarySupportLoader {
 			BinaryReader reader = new BinaryReader( provider, true );
 			ESP8266Module module = new ESP8266Module( reader );
 	
-//			createMethodLookupMemoryBlock( program, monitor );
-//			createMethodByteCodeBlock( program, length, monitor);
 			markupHeader(program, module.getHeader(), monitor, inputStream);
 			markupSections(program, module, monitor, inputStream);
-			monitor.setMessage( "ESP8266 Loader: Create byte code" );
 			
-			for (ESP8266Section section : module.getSections()) {
-				monitor.setMessage("Loaded " + section.getName());
-			}
 			// Create entry point
 			Address entryAddress = program.getAddressFactory().getDefaultAddressSpace().getAddress(module.getHeader().getEntrypoint(), true);
 			program.getSymbolTable().addExternalEntryPoint(entryAddress);

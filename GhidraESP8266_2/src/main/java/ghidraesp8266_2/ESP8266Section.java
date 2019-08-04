@@ -7,6 +7,7 @@ import ghidra.app.util.bin.StructConverter;
 import ghidra.program.model.data.DataType;
 import ghidra.program.model.data.Structure;
 import ghidra.program.model.data.StructureDataType;
+import ghidra.util.Msg;
 import ghidra.util.exception.DuplicateNameException;
 
 public class ESP8266Section implements StructConverter {
@@ -17,6 +18,8 @@ public class ESP8266Section implements StructConverter {
 	public ESP8266Section(BinaryReader reader) throws IOException {
 		offset = reader.readNextInt();
 		size = reader.readNextInt();
+		Msg.info(this, String.format("Reading %d bytes", size));
+		content = reader.readNextByteArray(size);
 	}
 
 	@Override
@@ -52,5 +55,18 @@ public class ESP8266Section implements StructConverter {
 			return ".code";
 		else
 			return ".unknown";
+	}
+	public int getType() {
+		// Rules based on ranges
+		if(offset == ESP8266Constants.SEGMENT_USER_CODE_BASE)
+			return ESP8266Constants.SECTION_TYPE_CODE;
+		else if(offset == ESP8266Constants.SEGMENT_USER_DATA_BASE)
+			return ESP8266Constants.SECTION_TYPE_DATA;
+		else if(offset <= ESP8266Constants.SEGMENT_DATA_END)
+			return ESP8266Constants.SECTION_TYPE_DATA;
+		else if(offset > ESP8266Constants.SEGMENT_CODE_BASE)
+			return ESP8266Constants.SECTION_TYPE_CODE;
+		else
+			return ESP8266Constants.SECTION_TYPE_DATA;
 	}
 }

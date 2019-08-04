@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ghidra.app.util.bin.BinaryReader;
+import ghidra.util.Msg;
 
 public class ESP8266Module  {
 	
@@ -21,6 +22,7 @@ public class ESP8266Module  {
 		reader.setPointerIndex(0x1000);
 		userheader = new ESP8266Header(reader);
 		for(int i=0; i < userheader.getSegmentCount(); ++i) {
+			Msg.info(this, "Adding section");
 			sections.add(new ESP8266Section(reader));
 		}
 	}

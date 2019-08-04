@@ -1,0 +1,42 @@
+//------------------------------------------------
+//--- 010 Editor v9.0.1 Binary Template
+//
+//      File: 
+//   Authors: 
+//   Version: 
+//   Purpose: 
+//  Category: 
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+string CheckMagic(int magic)
+{
+    if(0xe9 == magic)
+        return "Valid Magic";
+    else
+        return "Not a valid image";
+}
+struct header
+{
+    BYTE magic<comment=CheckMagic>;
+    BYTE sections;
+    BYTE flash_mode;
+    BYTE flash_size_free<format=decimal>;
+    int entrypoint<format=hex>;
+};
+struct section
+{
+    DWORD offset<format=hex>;
+    DWORD size;
+    BYTE  data[size];
+};
+header Header;
+FSeek(0x1000);
+header UserHeader;
+local int i<hidden=true>;
+for(i=0; i < UserHeader.sections; i++)
+{
+    section Section;
+    Printf("Section: %x %u", Section.offset, Section.size);
+}

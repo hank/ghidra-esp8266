@@ -7,6 +7,7 @@ import ghidra.app.util.bin.StructConverter;
 import ghidra.program.model.data.DataType;
 import ghidra.program.model.data.Structure;
 import ghidra.program.model.data.StructureDataType;
+import ghidra.util.Msg;
 import ghidra.util.exception.DuplicateNameException;
 
 public class ESP8266Header implements StructConverter {
@@ -19,13 +20,18 @@ public class ESP8266Header implements StructConverter {
 	
 	public ESP8266Header(BinaryReader reader) throws IOException {
 		magic = reader.readNextByte();
-		segments = reader.readNextByte();
-		flash_mode = reader.readNextByte();
-		flash_size_free = reader.readNextByte();
-		entrypoint = reader.readNextInt();
+		Msg.info(this, String.format("Magic = %02x", magic));
 		if (ESP8266Constants.ESP_MAGIC_BASE != getMagic()) {
 			throw new IOException("not an ESP8266 file.");
 		}
+		segments = reader.readNextByte();
+		Msg.info(this, String.format("Segments = %d", segments));
+		flash_mode = reader.readNextByte();
+		Msg.info(this, String.format("Flash Mode = %d", flash_mode));
+		flash_size_free = reader.readNextByte();
+		Msg.info(this, String.format("Flash Size Free = %d", flash_size_free));
+		entrypoint = reader.readNextInt();
+		Msg.info(this, String.format("Entrypoint = %08x", entrypoint));
 	}
 
 	@Override

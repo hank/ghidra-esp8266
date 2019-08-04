@@ -15,8 +15,6 @@
  */
 package ghidraesp8266_2;
 
-import java.io.IOException;
-
 import ghidra.app.services.AbstractAnalyzer;
 import ghidra.app.services.AnalyzerType;
 import ghidra.app.util.bin.BinaryReader;
@@ -57,8 +55,9 @@ public class GhidraESP8266_2Analyzer extends AbstractAnalyzer {
 
 		// Examine 'program' to determine of this analyzer should analyze it.  Return true
 		// if it can.
-		LanguageID lID = new LanguageID("Xtensa:LE:32:default");
-		return program.getLanguageID() == lID;
+		//LanguageID lID = new LanguageID("Xtensa:LE:32:default");
+		//return program.getLanguageID() == lID;
+		return false;
 	}
 
 	@Override
