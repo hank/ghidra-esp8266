@@ -88,7 +88,7 @@ public class GhidraESP8266_2Loader extends AbstractLibrarySupportLoader {
 		String BLOCK_SOURCE_NAME = "ESP8266 Header";
 		Address start = program.getAddressFactory().getDefaultAddressSpace().getAddress( 0x0 );
 		try {
-			mbu.createInitializedBlock(".header", start, reader, 5, "", BLOCK_SOURCE_NAME, r, w, x, monitor);
+			mbu.createInitializedBlock(".header", start, reader, 8, "", BLOCK_SOURCE_NAME, r, w, x, monitor);
 			createData(program, program.getListing(), start, header.toDataType());
 		} catch (AddressOverflowException e) {
 			// TODO Auto-generated catch block

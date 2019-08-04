@@ -40,6 +40,7 @@ public class ESP8266Section implements StructConverter {
 	}
 
 	public byte[] getContent() {
+		Msg.info(this, String.format("Section starts with %02x %02x %02x", content[0], content[1], content[2]));
 		return content;
 	}
 
