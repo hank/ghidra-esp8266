@@ -3,3 +3,8 @@ bin
 .settings
 .classpath
 .project
+build/
+dist/
+.gradle
+gradle.properties
+.vscode/
