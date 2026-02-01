@@ -25,12 +25,13 @@ import ghidra.app.util.bin.BinaryReader;
 import ghidra.app.util.bin.ByteProvider;
 import ghidra.app.util.importer.MessageLog;
 import ghidra.app.util.opinion.AbstractLibrarySupportLoader;
+import ghidra.app.util.opinion.Loader;
 import ghidra.app.util.opinion.LoadSpec;
 import ghidra.framework.model.DomainObject;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.address.AddressOverflowException;
 import ghidra.program.model.data.DataType;
-import ghidra.program.model.data.DataTypeConflictException;
+
 import ghidra.program.model.data.DataUtilities;
 import ghidra.program.model.data.DataUtilities.ClearDataMode;
 import ghidra.program.model.lang.LanguageCompilerSpecPair;
@@ -69,9 +70,9 @@ public class GhidraESP8266_2Loader extends AbstractLibrarySupportLoader {
 
 	@Override
 	public List<Option> getDefaultOptions(ByteProvider provider, LoadSpec loadSpec,
-			DomainObject domainObject, boolean isLoadIntoProgram) {
+			DomainObject domainObject, boolean isLoadIntoProgram, boolean mirrorFsLayout) {
 		List<Option> list =
-			super.getDefaultOptions(provider, loadSpec, domainObject, isLoadIntoProgram);
+			super.getDefaultOptions(provider, loadSpec, domainObject, isLoadIntoProgram, mirrorFsLayout);
 
 		// TODO: If this loader has custom options, add them to 'list'
 //		list.add(new Option("Option name goes here", "Default option value goes here"));
@@ -145,29 +146,29 @@ public class GhidraESP8266_2Loader extends AbstractLibrarySupportLoader {
 		catch (CodeUnitInsertionException e) {
 			Msg.warn(this, "Data markup conflict at " + address);
 		}
-		catch (DataTypeConflictException e) {
-			Msg.error(this, "Data type markup conflict:" + e.getMessage());
-		}
+
 		return null;
 	}
 	
 	@Override
-	protected void load(ByteProvider provider, LoadSpec loadSpec, List<Option> options, Program program,
-			TaskMonitor monitor, MessageLog log) throws CancelledException, IOException {
+	protected void load(Program program, ghidra.app.util.opinion.Loader.ImporterSettings settings) throws CancelledException, IOException {
+
+		TaskMonitor monitor = settings.monitor();
+		MessageLog log = settings.log();
+		ByteProvider provider = settings.provider();
 
 		monitor.setMessage( "ESP8266 Loader: Start loading" );
-		
+
 		try {
 			InputStream inputStream;
 			inputStream = provider.getInputStream(0);
 
-			
 			BinaryReader reader = new BinaryReader( provider, true );
 			ESP8266Module module = new ESP8266Module( reader );
-	
+
 			markupHeader(program, module.getHeader(), monitor, inputStream, log);
 			markupSections(program, module, monitor, inputStream, log);
-			
+
 			// Create entry point
 			Address entryAddress = program.getAddressFactory().getDefaultAddressSpace().getAddress(module.getHeader().getEntrypoint(), true);
 			program.getSymbolTable().addExternalEntryPoint(entryAddress);
